@@ -1,0 +1,13 @@
+{
+	"description": "Trivia App",
+	"license": "SEE LICENSE IN license",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/cindykimxp/triviaapp"
+	},
+	"scripts": {},
+	"dependencies": {
+		"express": "4.17.1"
+	},
+	"devDependencies": {}
+}
