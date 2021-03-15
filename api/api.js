@@ -1,7 +1,8 @@
 // import database connection
-let express = require("express");
+let route = require("express").Router();
 let mongo = require("mongoose");
-
+let database = import('../database/database')
+let utilities = import('../util/utilities')
 // features: trivia by category or trivia from all categories
 // standard:
 // have a round of N questions
@@ -35,6 +36,27 @@ question metadata:
 // returns a random question in <category>
 // if category is not given, select from all categories
 // returns: {question, question_id}
+route.get('/question/:category', async (request, response) => {
+	let category = request.params.category ? request.params.category : null
+	try {
+		let question = await getSingleQuestion(category)
+		return response.json({question})
+	}
+	catch(error) {
+		return response.json({error})
+	}
+})
+route.get('/questions/:number/:category', async (request, response) => {
+	let category = request.params.category ? request.params.category : null
+	let number = request.params.number ? request.params.number : 10
+	try {
+		let questions = await getQuestions(number , category)
+		return response.json({questions})
+	}
+	catch(error) {
+		return response.json({error})
+	}
+})
 let get_question = async (category, db) => {
 	let query = {};
 	if (category !== undefined){
@@ -53,7 +75,24 @@ let get_question = async (category, db) => {
 
 	return ret[Math.floor(ret.length * Math.random())];
 };
-
+let getQuestions = async (n, category=undefined) => {
+	try {
+		questions = await database.getAllQuestions();
+		utilities.shuffleArray(questions);
+		let returned_questions = []
+		n = Math.min(questions.length, n)
+		for (let i = 0; i < n; i++) {
+			returned_questions.push(question[i])
+		}
+		return Promise.resolve(returned_questions)
+	}
+	catch (error) {
+		return Promise.reject(error)
+	}
+}
+let getSingleQuestion = (category=undefined) => {
+	return getQuestions(1, category)
+}
 // get multiple questions
 // parameters: category, number
 // returns <number> questions from <category>
@@ -78,5 +117,6 @@ let get_question = async (category, db) => {
 // returns {category}
 
 module.exports = {
+	route,
 	get_question
 };
