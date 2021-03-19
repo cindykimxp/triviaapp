@@ -1,6 +1,6 @@
 // import database connection
 let route = require("express").Router();
-let mongo = require("mongoose");
+// let mongo = require("mongoose");
 let database = import('../database/database')
 let utilities = import('../util/utilities')
 // features: trivia by category or trivia from all categories
@@ -12,17 +12,16 @@ let utilities = import('../util/utilities')
 // burst: answer as many questions in time limit, e.g. 1 minute
 // score: total_correct
 
-// start new session
-// creates a new session ID
 
-mongo.model("question", new mongo.Schema({
-	text: String,
-	answers: [String],
-	//indices into the answers array
-	correct_answers: [Number],
-	categories: [String]
-}));
-let Question = mongo.model("question");
+
+// mongo.model("question", new mongo.Schema({
+// 	text: String,
+// 	answers: [String],
+// 	//indices into the answers array
+// 	correct_answers: [Number],
+// 	categories: [String]
+// }));
+// let Question = mongo.model("question");
 
 /*
 question metadata:
@@ -30,33 +29,6 @@ question metadata:
 - start time (sec since epoch)
 - time limit (sec)
 */
-
-// get a question
-// parameters: category
-// returns a random question in <category>
-// if category is not given, select from all categories
-// returns: {question, question_id}
-route.get('/question/:category', async (request, response) => {
-	let category = request.params.category ? request.params.category : null
-	try {
-		let question = await getSingleQuestion(category)
-		return response.json({question})
-	}
-	catch(error) {
-		return response.json({error})
-	}
-})
-route.get('/questions/:number/:category', async (request, response) => {
-	let category = request.params.category ? request.params.category : null
-	let number = request.params.number ? request.params.number : 10
-	try {
-		let questions = await getQuestions(number , category)
-		return response.json({questions})
-	}
-	catch(error) {
-		return response.json({error})
-	}
-})
 let get_question = async (category, db) => {
 	let query = {};
 	if (category !== undefined){
@@ -90,21 +62,70 @@ let getQuestions = async (n, category=undefined) => {
 		return Promise.reject(error)
 	}
 }
-let getSingleQuestion = (category=undefined) => {
+const getSingleQuestion = (category=undefined) => {
 	return getQuestions(1, category)
 }
+const getQuestionById = (id) => {
+	return database.getQuestionById(id)
+}
+const getAnswer = (question_id) => {
+	return getSingleQuestion()
+}
+// get a question
+// parameters: category
+// returns a random question in <category>
+// if category is not given, select from all categories
+// returns: {question, question_id}
+route.get('/question/:category', async (request, response) => {
+	let category = request.params.category ? request.params.category : null
+	try {
+		let question = await getSingleQuestion(category)
+		return response.json({question})
+	}
+	catch(error) {
+		return response.json({error})
+	}
+})
 // get multiple questions
 // parameters: category, number
 // returns <number> questions from <category>
 // if category is not given, select from all categories
 // returns: [{question, question_id}]
+route.get('/questions/:number/:category', async (request, response) => {
+	let category = request.params.category ? request.params.category : null
+	let number = request.params.number ? request.params.number : 10
+	try {
+		let questions = await getQuestions(number , category)
+		return response.json({questions})
+	}
+	catch(error) {
+		return response.json({error})
+	}
+})
 
 
 // answer question
-// parameters: question_id, time_taken
+// parameters: question_id, 
+// body: user_answer, time_taken (in ms since epoch)
 // stores score in database connected with this session ID
 // returns boolean
-
+route.post('/answer/:question_id', (request, response) => {
+	if (!request.params.question_id) {
+		return response.status(400)
+	}
+	let {question_id} = request.params
+	let {user_answer, time_taken} = request.body
+	try {
+		let question = await getQuestionById(question_id)
+		if (question.correct_answer === user_index) {
+			// TODO add data to database for this user
+		}
+		return response.json({result : question.correct_answer === user_index})
+	}
+	catch (error) {
+		return response.json({error})
+	}
+})
 // leaderboard
 // parameters: category, limit
 // returns top <limit> scores in <category>
