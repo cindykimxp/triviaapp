@@ -1,4 +1,5 @@
-let shuffleArray = (array) => {
+// shuffles an array in place
+const shuffleArray = (array) => {
     let n = array.length
     for (let i = 0; i < n; i++) {
         let q = Math.floor(Math.random() * n)

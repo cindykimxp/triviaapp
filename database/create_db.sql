@@ -13,13 +13,13 @@ create table standard_score(
     id text,
     score numeric(7, 5),
     category text,
-    priamry key (id, category)
+    primary key (id, category)
 );
 create table burst_score(
     id text,
     score numeric(7, 5),
     category text,
-    priamry key (id, category)
+    primary key (id, category)
 );
 CREATE TABLE "session" (
   "sid" varchar NOT NULL COLLATE "default",

@@ -1,3 +1,5 @@
 node_modules/
 .env
 database/database_init.js
+database/*.json
+Open-trivia-database/
