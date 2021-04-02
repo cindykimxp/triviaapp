@@ -16,24 +16,6 @@ const utilities = require('../util/utilities.js');
 // burst: answer as many questions in time limit, e.g. 1 minute
 // score: total_correct/total_time
 
-let get_question = async (category, db) => {
-	let query = {};
-	if (category !== undefined){
-		query = {
-			categories: {
-				$elemMatch: {$eq: category}
-			}
-		};
-	}
-
-	let ret = await Question.find(query).exec();
-
-	if (!ret.length){
-		throw `No questions in category ${category}`;
-	}
-
-	return ret[Math.floor(ret.length * Math.random())];
-};
 let getQuestions = async (n, category=null) => {
 	try {
 		questions = await database.getAllQuestions(category);
@@ -190,6 +172,7 @@ route.post('/answer/:question_id', async (request, response) => {
 // standard
 // burst
 route.post('/start/:mode/:category?', async (request, response) => {
+	console.log('got a start session')
 	try {
 		request.session.mode = request.params.mode
 		request.session.category = request.params.category ? request.params.category : undefined
@@ -197,12 +180,17 @@ route.post('/start/:mode/:category?', async (request, response) => {
 		request.session.total_questions_attempts = 0
 		request.session.num_correct = 0
 		request.final_score = 0
+		return response.sendStatus(200)
 	}
 	catch (error) {
 		return response.json({error})
 	}
 })
+//end sessions: 
+// standard  
+// burst
 route.post('/end/:mode', async (request, response) => {
+	console.log('got an end session')
 	try {
 		if (request.session.mode != request.params.mode) {
 			return response.json({"error" : 'ending a session that you did not start'}).status(400)
@@ -222,21 +210,57 @@ route.post('/end/:mode', async (request, response) => {
 		delete request.session.total_time
 		delete request.session.total_questions_attempts
 		delete request.session.num_correct
+		return response.sendStatus(200)
 	}
 	catch (error) {
-		return response.json({error})
+		return response.json({error}).status(400)
 	}
 })
-//end sessions: 
-// standard  
-// burst
 
 // leaderboard
 // parameters: category, limit
 // returns top <limit> scores in <category>
 // if category is not given then it returns top scores from all categories
 // returns {category, [{name, id, score, time}]}
+route.get('/leaderboard/:mode/:category?', async (request, response) => {
+	let limit = request.query.limit ? request.query.limit : 10
+	try {
+		let rows
+		let category
+		if (request.params.mode === 'burst') {
+			// get burst scores
+			if (request.params.category) {
+				category = request.params.category.toUpperCase()
+				// get scores by category
+				rows = await database.getAllBurstScoresByCategory(limit, category)
 
+			}
+			else {
+				// get all scores
+				rows = await database.getAllBurstScores(limit)
+			}
+		}
+		else {
+			// get standard scores
+			if (request.params.category) {
+				category = request.params.category.toUpperCase()
+				// get scores by category
+				rows = await database.getAllStandardScoresByCategory(limit, category)
+
+			}
+			else {
+				// get all scores
+				rows = await database.getAllStandardScores(limit)
+			}
+
+		}
+		console.log(rows)
+		return response.json({board : rows})
+	}
+	catch (error) {
+		return response.json({error}).status(400)
+	}
+})
 // leaderboard relative to your place
 // returns an array of scores of the surrounding 5 relative to your spot in <category>
 // parameters: category, id

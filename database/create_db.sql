@@ -11,13 +11,13 @@ create table question(
 );
 create table standard_score(
     id text,
-    score numeric(7, 5),
+    score numeric(8, 5),
     category text,
     primary key (id, category)
 );
 create table burst_score(
     id text,
-    score numeric(7, 5),
+    score numeric(8, 5),
     category text,
     primary key (id, category)
 );
